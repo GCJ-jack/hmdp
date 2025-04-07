@@ -25,5 +25,6 @@ mybatis-plus:
 logging:
   level:
     com.hmdp: debug
+    com.hmdp.service.impl.VoucherOrderServiceImpl: off
   pattern:
     dateformat: mm:ss.SSS
