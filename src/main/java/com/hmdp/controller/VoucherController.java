@@ -2,6 +2,7 @@ package com.hmdp.controller;
 
 
 import com.hmdp.dto.Result;
+import com.hmdp.entity.SeckillVoucher;
 import com.hmdp.entity.Voucher;
 import com.hmdp.service.IVoucherService;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,11 @@ public class VoucherController {
      * @param voucher 优惠券信息，包含秒杀信息
      * @return 优惠券id
      */
+//    @PostMapping("seckill")
+//    public Result addSeckillVoucher(@RequestBody Voucher voucher) {
+//        voucherService.addSeckillVoucher(voucher);
+//        return Result.ok(voucher.getId());
+//    }
     @PostMapping("seckill")
     public Result addSeckillVoucher(@RequestBody Voucher voucher) {
         voucherService.addSeckillVoucher(voucher);
@@ -38,6 +44,11 @@ public class VoucherController {
      * @param voucher 优惠券信息
      * @return 优惠券id
      */
+//    @PostMapping
+//    public Result addVoucher(@RequestBody Voucher voucher) {
+//        voucherService.save(voucher);
+//        return Result.ok(voucher.getId());
+//    }
     @PostMapping
     public Result addVoucher(@RequestBody Voucher voucher) {
         voucherService.save(voucher);

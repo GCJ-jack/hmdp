@@ -108,4 +108,9 @@ class HmDianPingApplicationTests {
         Long count = stringRedisTemplate.opsForHyperLogLog().size("hl2");
         System.out.println("count = " + count);
     }
+
+//    @Test
+//    void testRedis() {
+//        shopService.saveShop2Reids(1L,10L);
+//    }
 }

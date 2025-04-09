@@ -3,6 +3,7 @@ package com.hmdp.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.Result;
+import com.hmdp.entity.SeckillVoucher;
 import com.hmdp.entity.VoucherOrder;
 import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.ISeckillVoucherService;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -189,23 +191,67 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Override
     public Result seckillVoucher(Long voucherId) {
-        Long userId = UserHolder.getUser().getId();
-        long orderId = redisIdWorker.nextId("order");
-        // 1.执行lua脚本
-        Long result = stringRedisTemplate.execute(
-                SECKILL_SCRIPT,
-                Collections.emptyList(),
-                voucherId.toString(), userId.toString(), String.valueOf(orderId)
-        );
-        int r = result.intValue();
-        // 2.判断结果是否为0
-        if (r != 0) {
-            // 2.1.不为0 ，代表没有购买资格
-            return Result.fail(r == 1 ? "库存不足" : "不能重复下单");
+        //1.查询优惠券
+        SeckillVoucher voucher = seckillVoucherService.getById(voucherId);
+        //判断秒杀是否开始
+        if(voucher.getBeginTime().isAfter(LocalDateTime.now())){
+            //尚未开始
+            return Result.fail("秒杀尚未开始");
         }
-        // 3.返回订单id
+
+        //开始，判断库存是否充足
+        if(voucher.getStock() < 1){
+            //库存不足
+            return  Result.fail("库存不足");
+        }
+
+        //库存足够扣减
+        //5，扣减库存
+        boolean success = seckillVoucherService.update()
+                .setSql("stock= stock -1")
+                .eq("voucher_id", voucherId).update();
+        //创建订单
+        if(!success){
+            //扣减库存
+            return Result.fail("库存不足！");
+        }
+
+        //6.创建订单
+        VoucherOrder voucherOrder =  new VoucherOrder();
+        //6.1订单id
+        long orderId = redisIdWorker.nextId("order");
+        voucherOrder.setId(orderId);
+        //返回订单id
+        // 6.2.用户id
+        Long userId = UserHolder.getUser().getId();
+        voucherOrder.setUserId(userId);
+
+        // 6.3.代金券id
+        voucherOrder.setVoucherId(voucherId);
+        save(voucherOrder);
+
         return Result.ok(orderId);
     }
+
+//    @Override
+//    public Result seckillVoucher(Long voucherId) {
+//        Long userId = UserHolder.getUser().getId();
+//        long orderId = redisIdWorker.nextId("order");
+//        // 1.执行lua脚本
+//        Long result = stringRedisTemplate.execute(
+//                SECKILL_SCRIPT,
+//                Collections.emptyList(),
+//                voucherId.toString(), userId.toString(), String.valueOf(orderId)
+//        );
+//        int r = result.intValue();
+//        // 2.判断结果是否为0
+//        if (r != 0) {
+//            // 2.1.不为0 ，代表没有购买资格
+//            return Result.fail(r == 1 ? "库存不足" : "不能重复下单");
+//        }
+//        // 3.返回订单id
+//        return Result.ok(orderId);
+//    }
 
     /*@Override
     public Result seckillVoucher(Long voucherId) {
@@ -237,6 +283,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 3.返回订单id
         return Result.ok(orderId);
     }*/
+
+
     /*@Override
     public Result seckillVoucher(Long voucherId) {
         // 1.查询优惠券
@@ -259,6 +307,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
         return createVoucherOrder(voucherId);
     }
+
+
+
 
 
 
