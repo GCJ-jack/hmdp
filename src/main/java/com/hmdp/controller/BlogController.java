@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
+import com.hmdp.entity.User;
 import com.hmdp.service.IBlogService;
 import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
@@ -27,9 +28,20 @@ public class BlogController {
     @Resource
     private IBlogService blogService;
 
+//    @PostMapping
+//    public Result saveBlog(@RequestBody Blog blog) {
+//        return blogService.saveBlog(blog);
+//    }
+
     @PostMapping
-    public Result saveBlog(@RequestBody Blog blog) {
-        return blogService.saveBlog(blog);
+    public Result saveBlog(@RequestBody  Blog blog) {
+        //获取登陆用户
+        UserDTO user = UserHolder.getUser();
+        blog.setUserId(user.getId());
+        //保存探店博主blog
+        blogService.saveBlog(blog);
+        //返回id
+        return Result.ok(blog.getId());
     }
 
     @PutMapping("/like/{id}")
